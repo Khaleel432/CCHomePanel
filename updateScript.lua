@@ -1,5 +1,3 @@
-local scriptToUpdate = ""
-
 local function getScriptName(name)
 	local urlArray = {}
 	for word in string.gmatch(name, "([^*/]+)") do
@@ -15,6 +13,7 @@ local function updateFile(filepath, content)
 end
 
 local function updateScript()
+	local scriptToUpdate = "https://raw.githubusercontent.com/Khaleel432/CCHomePanel/main/transmitter.lua"
 	local request = http.get(scriptToUpdate);
 	local content = request.readAll();
 	local scriptName = getScriptName(scriptToUpdate);
