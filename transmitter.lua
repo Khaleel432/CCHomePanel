@@ -1,17 +1,6 @@
-local function transmit(data)
-	local serverId = rednet.lookup("dataLine", "server")
-	if serverId == nil then
-		printError("Unable to find server")
-		return nil
-	end
-	if not(rednet.send(serverId, data, "dataLine")) then
-		printError("Lost connection to server")
-		return nil
-	end
-	
-	return true
-	-- print(textutils.serialise({rednet.lookup("dataLine")}))
-end
+local serverName = "server"
+local serverProtocol = "serverLine"
+local receiveDataProtocol = "transmitData"
 
 local function setup()
 	local targetBlock = peripheral.find("create_target")
@@ -36,9 +25,9 @@ local function setup()
 end
 
 local function getData(targetBlock)
-	local currentStress = string.match(targetBlock.getLine(1),"%d+")
-	local stressCapacity = string.match(targetBlock.getLine(2),"%d+")
-	local percentage = currentStress / stressCapacity * 100
+	local currentStress = string.gsub(string.match(targetBlock.getLine(1),"%d[%d.,]*"),",", "")
+	local stressCapacity = string.gsub(string.match(targetBlock.getLine(2),"%d[%d.,]*"),",", "")
+	local percentage = (currentStress / stressCapacity) * 100
 	local data = {
 		currentStress = currentStress,
 		stressCapacity = stressCapacity,
@@ -47,17 +36,25 @@ local function getData(targetBlock)
 	return data
 end
 
+local function transmitData(serverId, data)
+	rednet.send(serverId, data, receiveDataProtocol)
+	return true
+end
+
 local function start()
 	local blocks = setup();
+	local serverId = rednet.lookup(serverProtocol, serverName)
 	if blocks == nil then
 		return
+	end
+	if serverId == nil then
+		printError("Unable to find server")
+		return nil
 	end
 	local targetBlock = blocks.targetBlock
 	while true do
 		local data = getData(targetBlock)
-		if transmit(data) == nil then
-			return
-		end
+		transmitData(serverId,data)
 		sleep(1)
 	end
 end
